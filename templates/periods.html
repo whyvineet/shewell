@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Periods Tracker & Health Guide</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script defer src="{{ url_for('static', filename='js/script.js') }}"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Periods Tracker & Health Guide</h1>
+            <p>Track your cycle and stay informed about your health.</p>
+        </header>
+        
+        <section class="tracker">
+            <h2>Enter Your Last Period Date</h2>
+            <input type="date" id="lastPeriod" required>
+            <button onclick="calculateNextPeriod()">Calculate Next Cycle</button>
+            <p id="result"></p>
+        </section>
+
+        <section class="health-tips">
+            <h2>Diet & Exercises for Period Health</h2>
+
+            <div class="tips-container">
+                <div class="tip">
+                    <img src="{{ url_for('static', filename='images/healthy_food.jpg') }}" alt="Healthy Food">
+                    <h3>Healthy Diet</h3>
+                    <p>Eat iron-rich foods like spinach, nuts, and dark chocolate. Avoid caffeine and processed foods.</p>
+                </div>
+
+                <div class="tip">
+                    <img src="{{ url_for('static', filename='images/yogaa.png') }}" alt="Yoga Exercise">
+                    <h3>Gentle Exercises</h3>
+                    <p>Try yoga, walking, and stretching to relieve cramps and improve blood circulation.</p>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <p>Stay informed & take care of your health 💖</p>
+        </footer>
+    </div>
+</body>
+</html>

@@ -42,7 +42,7 @@
     {% block styles %}{% endblock %}
 </head>
 
-<body>
+<body> 
     <div class="container max-w-6xl mx-auto px-4">
         <nav class="flex justify-between items-center py-6">
             <a href="{{ url_for('home') }}" class="text-2xl font-montserrat font-bold">
@@ -51,25 +51,29 @@
             <div class="hidden md:flex space-x-8">
                 <a href="{{ url_for('home') }}" class="font-semibold hover:text-accent transition">Home</a>
                 {% if session.get('user_id') and session.get('user_type') == 'patient' %}
-                <a href="{{ url_for('doctors') }}" class="font-semibold hover:text-accent transition">Doctors</a>
-                <a href="{{ url_for('chatbot') }}" class="font-semibold hover:text-accent transition">Chatbot</a>
+                    <a href="{{ url_for('doctors') }}" class="font-semibold hover:text-accent transition">Doctors</a>
+                    <a href="{{ url_for('chatbot') }}" class="font-semibold hover:text-accent transition">Chatbot</a>
                 {% endif %}
+                <a href="{{ url_for('periods') }}" class="font-semibold hover:text-accent transition">Periods</a>
                 <a href="#" class="font-semibold hover:text-accent transition">About</a>
             </div>
             <div class="space-x-2">
                 {% if session.get('user_id') %}
-                <a href="{{ url_for('dashboard') }}"
-                    class="px-4 py-2 rounded-full bg-primary text-white font-semibold hover:bg-opacity-80 transition">Dashboard</a>
-                <a href="{{ url_for('logout') }}"
-                    class="px-4 py-2 rounded-full bg-accent text-white font-semibold hover:bg-opacity-80 transition">Logout</a>
+                    <a href="{{ url_for('dashboard') }}"
+                        class="px-4 py-2 rounded-full bg-primary text-white font-semibold hover:bg-opacity-80 transition">Dashboard</a>
+                    <a href="{{ url_for('logout') }}"
+                        class="px-4 py-2 rounded-full bg-accent text-white font-semibold hover:bg-opacity-80 transition">Logout</a>
                 {% else %}
-                <a href="{{ url_for('login') }}"
-                    class="px-4 py-2 rounded-full bg-primary text-white font-semibold hover:bg-opacity-80 transition">Login</a>
-                <a href="{{ url_for('register') }}"
-                    class="px-4 py-2 rounded-full bg-accent text-white font-semibold hover:bg-opacity-80 transition">Register</a>
+                    <a href="{{ url_for('login') }}"
+                        class="px-4 py-2 rounded-full bg-primary text-white font-semibold hover:bg-opacity-80 transition">Login</a>
+                    <a href="{{ url_for('register') }}"
+                        class="px-4 py-2 rounded-full bg-accent text-white font-semibold hover:bg-opacity-80 transition">Register</a>
                 {% endif %}
             </div>
         </nav>
+    </div>
+</body>
+
 
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
