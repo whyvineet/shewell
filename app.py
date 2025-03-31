@@ -7,6 +7,8 @@ from twilio.rest import Client
 from dotenv import load_dotenv
 import google.generativeai as genai
 from datetime import datetime
+from deep_translator import GoogleTranslator
+
 
 # Load environment variables from a .env file
 load_dotenv()
@@ -214,6 +216,7 @@ def chatbot():
     
     return render_template('chatbot.html')
 
+
 @app.route('/api/chat', methods=['POST'])
 def chat():
     redirect_result = login_required('patient')
@@ -221,25 +224,35 @@ def chat():
         return jsonify({'error': 'Unauthorized'}), 401
         
     user_message = request.json.get('message')
-    
+    selected_language = request.json.get('language', 'en')  # Default is English
+
     if not gemini_model:
         return jsonify({'response': 'AI chatbot is not configured. Please check your environment variables.'}), 503
     
+    
+    def translate_text(text, target_language="en"):
+        return GoogleTranslator(source='auto', target=target_language).translate(text)
+
+
     # Add context for pregnancy-related questions
     prompt = f"""
     You are a supportive AI assistant for pregnant women on the SheWell platform.
     Provide helpful, accurate information about pregnancy, but always recommend 
-    consulting with their doctor for medical advice. The question is: {user_message}
+    consulting with their doctor for medical advice. The question is: {translated_message}
     """
     
     try:
         response = gemini_model.generate_content(prompt)
-        return jsonify({'response': response.text})
+        ai_response = response.text
+
+        # Translate AI response back to user's selected language
+        translated_response = translator.translate(ai_response, src='en', dest=selected_language).text
+        
+        return jsonify({'response': translated_response})
     except Exception as e:
         app.logger.error(f"Failed to generate AI response: {e}")
         return jsonify({'response': 'Sorry, I was unable to process your request. Please try again later.'}), 500
 
-# Create a simple admin route to add doctors (for demo purposes)
 @app.route('/admin/add_doctor', methods=['GET', 'POST'])
 def add_doctor():
     if request.method == 'POST':

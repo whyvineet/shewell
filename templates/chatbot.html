@@ -5,6 +5,24 @@
 {% block content %}
 <div class="max-w-4xl mx-auto my-12 bg-white p-8 rounded-xl shadow-md">
     <h1 class="text-2xl font-montserrat font-bold mb-6 text-center">SheWell AI Assistant</h1>
+    
+    <!-- Language Selection Dropdown -->
+    <div class="mb-4 text-center">
+        <label for="language" class="font-semibold">Select Language: </label>
+        <select id="language" class="border border-gray-300 px-3 py-1 rounded-md">
+            <option value="en" selected>English</option>
+            <option value="hi">हिन्दी (Hindi)</option>
+            <option value="bn">বাংলা (Bengali)</option>
+            <option value="ta">தமிழ் (Tamil)</option>
+            <option value="te">తెలుగు (Telugu)</option>
+            <option value="mr">मराठी (Marathi)</option>
+            <option value="gu">ગુજરાતી (Gujarati)</option>
+            <option value="pa">ਪੰਜਾਬੀ (Punjabi)</option>
+            <option value="ml">മലയാളം (Malayalam)</option>
+            <option value="kn">ಕನ್ನಡ (Kannada)</option>
+        </select>
+    </div>
+
     <div id="chat-container" class="flex flex-col h-96 border border-gray-300 rounded-lg overflow-hidden">
         <div id="chat-messages" class="flex-1 p-4 overflow-y-auto bg-gray-100">
             <div class="bg-primary text-white p-3 rounded-lg mb-3 max-w-[80%]">
@@ -29,6 +47,7 @@
         const chatInput = document.getElementById('chat-input');
         const sendMessage = document.getElementById('send-message');
         const chatMessages = document.getElementById('chat-messages');
+        const languageSelect = document.getElementById('language'); // Get language selection dropdown
 
         function addMessage(message, isUser) {
             const messageDiv = document.createElement('div');
@@ -42,17 +61,16 @@
 
         sendMessage.addEventListener('click', async () => {
             const message = chatInput.value.trim();
+            const selectedLanguage = languageSelect.value; // Get selected language
             if (message) {
                 addMessage(message, true);
                 chatInput.value = '';
 
                 try {
-                    const response = await fetch('{{ url_for("chat") }}', {
+                    const response = await fetch('/api/chat', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ message }),
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message, language: selectedLanguage }), // Send language to API
                     });
 
                     if (response.ok) {
