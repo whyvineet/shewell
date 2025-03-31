@@ -79,6 +79,11 @@ def login():
 def register():
     return render_template('register.html')
 
+@app.route('/periods')
+def periods():
+    return render_template('periods.html')
+
+
 @app.route('/register_patient', methods=['POST'])
 def register_patient():
     name = request.form.get('name')
