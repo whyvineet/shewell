@@ -29,12 +29,9 @@ else:
     twilio_client = None
     twilio_phone_number = None
 
-# Configure Gemini AI if API key is available
-if os.getenv('GEMINI_API_KEY'):
-    genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
-    gemini_model = genai.GenerativeModel('gemini-2.0-flash')
-else:
-    gemini_model = None
+# Configure Google Generative AI
+genai.configure(api_key='your_api_key_here')  # Replace with your actual API key
+gemini_model = genai.GenerativeModel('gemini-2.0-flash')
 
 # Helper function to check if user is logged in
 def login_required(user_type=None):
@@ -220,34 +217,44 @@ def chatbot():
 @app.route('/api/chat', methods=['POST'])
 def chat():
     redirect_result = login_required('patient')
-    if redirect_result:
+    if redirect_result is not None:
         return jsonify({'error': 'Unauthorized'}), 401
-        
-    user_message = request.json.get('message')
-    selected_language = request.json.get('language', 'en')  # Default is English
+
+    data = request.get_json()
+    if not data or 'message' not in data:
+        return jsonify({'error': 'Message is required'}), 400
+
+    user_message = data.get('message')
+    selected_language = data.get('language', 'en')  # Default to English
 
     if not gemini_model:
         return jsonify({'response': 'AI chatbot is not configured. Please check your environment variables.'}), 503
     
     
     def translate_text(text, target_language="en"):
-        return GoogleTranslator(source='auto', target=target_language).translate(text)
+        try:
+            return GoogleTranslator(source='auto', target=target_language).translate(text)
+        except Exception as e:
+            app.logger.error(f"Translation error: {e}")
+            return text  # Return original text if translation fails
 
+    # Translate user message to English for processing
+    user_message_translated = translate_text(user_message, target_language='en')
 
     # Add context for pregnancy-related questions
     prompt = f"""
     You are a supportive AI assistant for pregnant women on the SheWell platform.
     Provide helpful, accurate information about pregnancy, but always recommend 
-    consulting with their doctor for medical advice. The question is: {translated_message}
+    consulting with their doctor for medical advice. The question is: {user_message_translated}
     """
-    
+
     try:
         response = gemini_model.generate_content(prompt)
-        ai_response = response.text
+        ai_response = response.text.strip() if response and hasattr(response, 'text') else "I'm sorry, I couldn't process your request."
 
-        # Translate AI response back to user's selected language
-        translated_response = translator.translate(ai_response, src='en', dest=selected_language).text
-        
+        # Translate AI response back to the user's selected language
+        translated_response = translate_text(ai_response, target_language=selected_language)
+
         return jsonify({'response': translated_response})
     except Exception as e:
         app.logger.error(f"Failed to generate AI response: {e}")
