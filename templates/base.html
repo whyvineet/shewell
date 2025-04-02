@@ -8,6 +8,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600&display=swap"
         rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -37,6 +38,35 @@
 
         .font-montserrat {
             font-family: 'Montserrat', sans-serif;
+        }
+
+        /* Voice Input Styles */
+        .voice-input-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin: 1.5rem 0;
+        }
+
+        .btn-microphone {
+            transition: all 0.3s ease;
+        }
+
+        .recording {
+            animation: pulse 1.5s infinite;
+            background-color: #ff8c69 !important;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        #transcriptResult {
+            border-left: 4px solid #b9a5cb;
+            background-color: #f8f9fa;
         }
     </style>
     {% block styles %}{% endblock %}
@@ -113,7 +143,127 @@
         </div>
     </footer>
 
+    <!-- Voice to Text Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Voice recording functionality
+            const startBtn = document.getElementById('startRecording');
+            const stopBtn = document.getElementById('stopRecording');
+            const voiceStatus = document.getElementById('voiceStatus');
+            const transcriptResult = document.getElementById('transcriptResult');
+            const audioPlayback = document.getElementById('audioPlayback');
+            
+            // Only initialize if elements exist on the page
+            if (startBtn && stopBtn) {
+                let mediaRecorder;
+                let audioChunks = [];
+                let recordingInterval;
+
+                // Check browser support
+                if (!navigator.mediaDevices || !window.MediaRecorder) {
+                    voiceStatus.innerHTML = '<div class="p-2 rounded bg-yellow-100 text-yellow-800">Voice input not supported in your browser</div>';
+                    startBtn.disabled = true;
+                    return;
+                }
+
+                // Start recording
+                startBtn.addEventListener('click', async () => {
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        mediaRecorder = new MediaRecorder(stream);
+                        
+                        mediaRecorder.ondataavailable = (e) => {
+                            audioChunks.push(e.data);
+                        };
+                        
+                        mediaRecorder.onstop = async () => {
+                            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                            audioChunks = [];
+                            
+                            // Create playback
+                            if (audioPlayback) {
+                                audioPlayback.src = URL.createObjectURL(audioBlob);
+                                audioPlayback.classList.remove('hidden');
+                            }
+                            
+                            // Send to server for processing
+                            await sendAudioToServer(audioBlob);
+                        };
+                        
+                        mediaRecorder.start();
+                        startBtn.disabled = true;
+                        stopBtn.disabled = false;
+                        startBtn.classList.add('recording');
+                        voiceStatus.innerHTML = '<div class="p-2 rounded bg-blue-100 text-blue-800">Recording... Speak now</div>';
+                        
+                        // Auto-stop after 30 seconds
+                        recordingInterval = setTimeout(() => {
+                            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                                mediaRecorder.stop();
+                            }
+                        }, 30000);
+                        
+                    } catch (error) {
+                        console.error('Error accessing microphone:', error);
+                        voiceStatus.innerHTML = `<div class="p-2 rounded bg-red-100 text-red-800">Error: ${error.message}</div>`;
+                    }
+                });
+
+                // Stop recording
+                stopBtn.addEventListener('click', () => {
+                    if (mediaRecorder && mediaRecorder.state === 'recording') {
+                        mediaRecorder.stop();
+                        clearTimeout(recordingInterval);
+                        startBtn.disabled = false;
+                        stopBtn.disabled = true;
+                        startBtn.classList.remove('recording');
+                        voiceStatus.innerHTML = '<div class="p-2 rounded bg-green-100 text-green-800">Processing your voice...</div>';
+                    }
+                });
+
+                // Send audio to Flask backend
+                async function sendAudioToServer(audioBlob) {
+                    const formData = new FormData();
+                    formData.append('audio', audioBlob, 'recording.wav');
+                    formData.append('language', 'en-US'); // Can be dynamic based on user selection
+                    
+                    try {
+                        const response = await fetch('/api/voice-to-text', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.text) {
+                            transcriptResult.innerHTML = `
+                                <h5 class="font-semibold text-lg mb-2">Transcript:</h5>
+                                <p class="mb-3">${data.text}</p>
+                                <button class="px-3 py-1 rounded-full bg-accent text-white use-transcript">Use This Text</button>
+                            `;
+                            
+                            // Add click handler for use button
+                            document.querySelector('.use-transcript')?.addEventListener('click', () => {
+                                // Implement how you want to use the transcript
+                                const inputField = document.querySelector('input[name="last_period"]') || 
+                                                  document.querySelector('input[type="date"]');
+                                if (inputField) {
+                                    inputField.value = data.text;
+                                }
+                            });
+                            
+                        } else if (data.error) {
+                            voiceStatus.innerHTML = `<div class="p-2 rounded bg-red-100 text-red-800">Error: ${data.error}</div>`;
+                        }
+                    } catch (error) {
+                        console.error('Error sending audio:', error);
+                        voiceStatus.innerHTML = '<div class="p-2 rounded bg-red-100 text-red-800">Failed to process audio</div>';
+                    }
+                }
+            }
+        });
+    </script>
+
     {% block scripts %}{% endblock %}
 </body>
-
 </html>
