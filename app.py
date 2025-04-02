@@ -8,7 +8,9 @@ from dotenv import load_dotenv
 import google.generativeai as genai
 from datetime import datetime
 from deep_translator import GoogleTranslator
-
+import speech_recognition as sr
+import tempfile
+import io
 
 # Load environment variables from a .env file
 load_dotenv()
@@ -29,9 +31,15 @@ else:
     twilio_client = None
     twilio_phone_number = None
 
-# Configure Google Generative AI
-genai.configure(api_key='your_api_key_here')  # Replace with your actual API key
-gemini_model = genai.GenerativeModel('gemini-2.0-flash')
+# Configure Gemini AI if API key is available
+if os.getenv('GEMINI_API_KEY'):
+    genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
+    gemini_model = genai.GenerativeModel('gemini-2.0-flash')
+else:
+    gemini_model = None
+
+# Initialize speech recognizer
+recognizer = sr.Recognizer()
 
 # Helper function to check if user is logged in
 def login_required(user_type=None):
@@ -76,10 +84,75 @@ def login():
 def register():
     return render_template('register.html')
 
-@app.route('/periods')
+@app.route('/periods', methods=['GET', 'POST'])
 def periods():
+    if request.method == 'POST':
+        # Handle both manual date input and voice input
+        last_period_date = request.form.get('lastPeriod')
+        voice_date = request.form.get('voice_date')
+        
+        if voice_date:
+            # Process voice input date
+            last_period_date = process_voice_date(voice_date)
+        
+        if last_period_date:
+            # Calculate next period date (28-day cycle)
+            last_period = datetime.strptime(last_period_date, '%Y-%m-%d')
+            next_period = last_period + timedelta(days=28)
+            return render_template('periods.html', 
+                                last_period=last_period_date,
+                                next_period=next_period.strftime('%Y-%m-%d'))
+    
     return render_template('periods.html')
 
+def process_voice_date(voice_text):
+    try:
+        # Add your voice date parsing logic here
+        # This is a simplified version - you may need more sophisticated NLP
+        if 'today' in voice_text.lower():
+            return datetime.now().strftime('%Y-%m-%d')
+        elif 'yesterday' in voice_text.lower():
+            return (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
+        # Add more voice date patterns as needed
+        else:
+            return None
+    except:
+        return None
+
+@app.route('/api/voice-to-text', methods=['POST'])
+def voice_to_text():
+    redirect_result = login_required('patient')
+    if redirect_result is not None:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    if 'audio' not in request.files:
+        return jsonify({'error': 'No audio file provided'}), 400
+    
+    audio_file = request.files['audio']
+    selected_language = request.form.get('language', 'en-US')  # Default to English
+    
+    try:
+        # Save the audio file temporarily
+        with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tmp_file:
+            audio_file.save(tmp_file.name)
+            
+            # Use speech recognition to convert audio to text
+            with sr.AudioFile(tmp_file.name) as source:
+                audio_data = recognizer.record(source)
+                text = recognizer.recognize_google(audio_data, language=selected_language)
+                
+        # Clean up the temporary file
+        os.unlink(tmp_file.name)
+        
+        return jsonify({'text': text})
+    
+    except sr.UnknownValueError:
+        return jsonify({'error': 'Could not understand audio'}), 400
+    except sr.RequestError as e:
+        return jsonify({'error': f'Speech recognition service error: {e}'}), 500
+    except Exception as e:
+        app.logger.error(f"Error in voice-to-text conversion: {e}")
+        return jsonify({'error': 'An error occurred during voice recognition'}), 500
 
 @app.route('/register_patient', methods=['POST'])
 def register_patient():
@@ -218,48 +291,35 @@ def chatbot():
     
     return render_template('chatbot.html')
 
-
 @app.route('/api/chat', methods=['POST'])
 def chat():
     redirect_result = login_required('patient')
     if redirect_result is not None:
         return jsonify({'error': 'Unauthorized'}), 401
-
-    data = request.get_json()
-    if not data or 'message' not in data:
-        return jsonify({'error': 'Message is required'}), 400
-
-    user_message = data.get('message')
-    selected_language = data.get('language', 'en')  # Default to English
+        
+    user_message = request.json.get('message')
+    selected_language = request.json.get('language', 'en')  # Default is English
 
     if not gemini_model:
         return jsonify({'response': 'AI chatbot is not configured. Please check your environment variables.'}), 503
     
-    
     def translate_text(text, target_language="en"):
-        try:
-            return GoogleTranslator(source='auto', target=target_language).translate(text)
-        except Exception as e:
-            app.logger.error(f"Translation error: {e}")
-            return text  # Return original text if translation fails
-
-    # Translate user message to English for processing
-    user_message_translated = translate_text(user_message, target_language='en')
+        return GoogleTranslator(source='auto', target=target_language).translate(text)
 
     # Add context for pregnancy-related questions
     prompt = f"""
     You are a supportive AI assistant for pregnant women on the SheWell platform.
     Provide helpful, accurate information about pregnancy, but always recommend 
-    consulting with their doctor for medical advice. The question is: {user_message_translated}
+    consulting with their doctor for medical advice. The question is: {user_message}
     """
-
+    
     try:
         response = gemini_model.generate_content(prompt)
-        ai_response = response.text.strip() if response and hasattr(response, 'text') else "I'm sorry, I couldn't process your request."
+        ai_response = response.text
 
-        # Translate AI response back to the user's selected language
+        # Translate AI response back to user's selected language
         translated_response = translate_text(ai_response, target_language=selected_language)
-
+        
         return jsonify({'response': translated_response})
     except Exception as e:
         app.logger.error(f"Failed to generate AI response: {e}")
