@@ -55,7 +55,10 @@
                     <a href="{{ url_for('chatbot') }}" class="font-semibold hover:text-accent transition">Chatbot</a>
                 {% endif %}
                 <a href="{{ url_for('periods') }}" class="font-semibold hover:text-accent transition">Periods</a>
-                <a href="#" class="font-semibold hover:text-accent transition">About</a>
+                <a href="{{ url_for('mental_health') }}"class="font-semibold hover:text-accent transition">Mental Health</a>
+
+                <a href="{{ url_for('about') }}"class="font-semibold hover:text-accent transition">About</a>
+
             </div>
             <div class="space-x-2">
                 {% if session.get('user_id') %}

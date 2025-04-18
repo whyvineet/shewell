@@ -8,7 +8,8 @@ from dotenv import load_dotenv
 import google.generativeai as genai
 from datetime import datetime
 from deep_translator import GoogleTranslator
-
+from flask import render_template
+import random
 
 # Load environment variables from a .env file
 load_dotenv()
@@ -79,6 +80,25 @@ def register():
 @app.route('/periods')
 def periods():
     return render_template('periods.html')
+
+@app.route("/mental-health")
+def mental_health():
+    quotes = [
+        "This too shall pass.",
+        "You are stronger than you think.",
+        "Breathe in courage, breathe out fear.",
+        "One day at a time.",
+        "You are enough just as you are.",
+        "The sun will rise, and so will you."
+    ]
+    random_quote = random.choice(quotes)
+    print(f"Random Quote: {random_quote}")  # For debugging
+    return render_template("mental_health.html", quote=random_quote)
+
+@app.route("/about")
+def about():
+    return render_template("about.html")
+
 
 
 @app.route('/register_patient', methods=['POST'])
