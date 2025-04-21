@@ -95,6 +95,11 @@ def mental_health():
     print(f"Random Quote: {random_quote}")  # For debugging
     return render_template("mental_health.html", quote=random_quote)
 
+@app.route('/reels')
+def reels():
+    return render_template("reels.html")
+
+
 @app.route("/about")
 def about():
     return render_template("about.html")

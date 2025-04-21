@@ -96,23 +96,45 @@
         <p id="result" class="mt-4"></p>
     </section>
 
-    <section class="health-tips">
-        <h2 class="text-2xl font-montserrat font-bold mb-6">Diet & Exercises for Period Health</h2>
+ 
+<section class="bg-gradient-to-b from-[#fdf2f8] to-white py-12 px-4 sm:px-8 rounded-2xl shadow-lg">
+    <h2 class="text-4xl font-extrabold text-center text-[#b25ea3] mb-10 font-montserrat">🌸 Health Tips for Your Period</h2>
 
-        <div class="tips-container">
-            <div class="tip">
-                <img src="{{ url_for('static', filename='images/healthy_food.jpg') }}" alt="Healthy Food">
-                <h3 class="text-xl">Healthy Diet</h3>
-                <p>Eat iron-rich foods like spinach, nuts, and dark chocolate. Avoid caffeine and processed foods.</p>
-            </div>
+    <div class="space-y-6 max-w-2xl mx-auto">
 
-            <div class="tip">
-                <img src="{{ url_for('static', filename='images/yogaa.png') }}" alt="Yoga Exercise">
-                <h3 class="text-xl">Gentle Exercises</h3>
-                <p>Try yoga, walking, and stretching to relieve cramps and improve blood circulation.</p>
-            </div>
+        <!-- Tip 1 -->
+        <div class="bg-[#ffe8f0] border-l-8 border-[#ff6f91] rounded-xl p-5 shadow-sm hover:shadow-md transition-all">
+            <h3 class="text-xl font-semibold text-[#a23d68]">🍽️ Eat Iron-rich Foods</h3>
+            <p class="text-gray-700 mt-2 text-sm">Include spinach, lentils, and jaggery in your meals. They help reduce tiredness and increase strength during your cycle.</p>
         </div>
-    </section>
+
+        <!-- Tip 2 -->
+        <div class="bg-[#e5f6ff] border-l-8 border-[#00bcd4] rounded-xl p-5 shadow-sm hover:shadow-md transition-all">
+            <h3 class="text-xl font-semibold text-[#007c91]">🧘 Gentle Movements</h3>
+            <p class="text-gray-700 mt-2 text-sm">Try simple yoga, light stretching, or even a short walk to ease cramps and boost mood.</p>
+        </div>
+
+        <!-- Tip 3 -->
+        <div class="bg-[#fef6e4] border-l-8 border-[#fca311] rounded-xl p-5 shadow-sm hover:shadow-md transition-all">
+            <h3 class="text-xl font-semibold text-[#cc8500]">💧 Stay Hydrated</h3>
+            <p class="text-gray-700 mt-2 text-sm">Drink 8–10 glasses of water daily. It helps reduce bloating and improves digestion.</p>
+        </div>
+
+        <!-- Tip 4 -->
+        <div class="bg-[#e8f5e9] border-l-8 border-[#66bb6a] rounded-xl p-5 shadow-sm hover:shadow-md transition-all">
+            <h3 class="text-xl font-semibold text-[#388e3c]">😴 Prioritize Rest</h3>
+            <p class="text-gray-700 mt-2 text-sm">Getting 7–8 hours of sleep balances hormones and helps your body recover during your period.</p>
+        </div>
+
+        <!-- Tip 5 -->
+        <div class="bg-[#ede7f6] border-l-8 border-[#7e57c2] rounded-xl p-5 shadow-sm hover:shadow-md transition-all">
+            <h3 class="text-xl font-semibold text-[#5e35b1]">🌿 Avoid Stress</h3>
+            <p class="text-gray-700 mt-2 text-sm">Relax through breathing, storytelling, or light music. A calm mind makes the cycle smoother.</p>
+        </div>
+
+    </div>
+</section>
+
 </div>
 {% endblock %}
 
