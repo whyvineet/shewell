@@ -28,6 +28,7 @@ class Doctor(db.Model):
     experience = db.Column(db.Integer, nullable=False)
     phone = db.Column(db.String(20), nullable=False)
     available_days = db.Column(db.String(100), nullable=False)
+    per_minute_price = db.Column(db.Float, nullable=False, default=0.0)
     appointments = db.relationship('Appointment', backref='doctor', lazy=True)
     
     def set_password(self, password):

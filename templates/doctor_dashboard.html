@@ -1,150 +1,55 @@
 {% extends "base.html" %}
 
-{% block title %}Doctor Dashboard - SheWell{% endblock %}
+{% block title %}Doctor Dashboard{% endblock %}
 
 {% block content %}
-<div class="my-12">
-    <div class="bg-white p-6 rounded-xl shadow-md mb-8">
-        <h1 class="text-2xl font-montserrat font-bold">Welcome, Dr. {{ doctor.name }}</h1>
-        <p class="text-gray-600 mt-2">{{ doctor.specialization }} • {{ doctor.experience }} years of experience</p>
-    </div>
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">Welcome, Dr. {{ doctor.name }}</h1>
     
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="bg-primary bg-opacity-10 p-6 rounded-xl">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h3 class="text-xl font-montserrat font-semibold">Today's Appointments</h3>
-                    <p class="text-3xl font-bold mt-2">
-                        {{ appointments|selectattr('date', 'equalto', now.date())|list|length }}
-                    </p>
-                </div>
-                <div class="text-4xl">📆</div>
-            </div>
-        </div>
-        
-        <div class="bg-secondary bg-opacity-20 p-6 rounded-xl">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h3 class="text-xl font-montserrat font-semibold">This Week</h3>
-                    <p class="text-3xl font-bold mt-2">
-                        {{ appointments | selectattr('date', 'equalto', now.date()) | list | length }}
-                    </p>
-                </div>
-                <div class="text-4xl">📅</div>
-            </div>
-        </div>
-        
-        <div class="bg-accent bg-opacity-10 p-6 rounded-xl">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h3 class="text-xl font-montserrat font-semibold">Available On</h3>
-                    <p class="text-lg font-semibold mt-2">{{ doctor.available_days }}</p>
-                </div>
-                <div class="text-4xl">⏰</div>
-            </div>
-        </div>
+    <!-- Basic Info Section -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h2 class="text-xl font-semibold mb-4">Your Information</h2>
+        <p><span class="font-medium">Specialization:</span> {{ doctor.specialization }}</p>
+        <p><span class="font-medium">Experience:</span> {{ doctor.experience }} years</p>
+        <p><span class="font-medium">Consultation Rate:</span> ₹{{ doctor.per_minute_price }}/min</p>
     </div>
-    
-    <div class="bg-white p-6 rounded-xl shadow-md">
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-xl font-montserrat font-semibold text-primary">Upcoming Appointments</h2>
-            <div>
-                <select id="status-filter" class="p-2 border border-gray-300 rounded-lg text-sm">
-                    <option value="all">All Appointments</option>
-                    <option value="today">Today</option>
-                    <option value="upcoming">Upcoming</option>
-                    <option value="completed">Completed</option>
-                </select>
-            </div>
-        </div>
-        
+
+    <!-- Appointments Section -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-semibold mb-4">Your Appointments</h2>
         {% if appointments %}
             <div class="overflow-x-auto">
-                <table class="w-full">
+                <table class="min-w-full">
                     <thead>
-                        <tr class="border-b-2 border-gray-200">
+                        <tr class="border-b">
                             <th class="py-3 text-left">Patient</th>
-                            <th class="py-3 text-left">Contact</th>
                             <th class="py-3 text-left">Date</th>
                             <th class="py-3 text-left">Time</th>
                             <th class="py-3 text-left">Status</th>
-                            <th class="py-3 text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for appointment in appointments %}
-                            <tr class="border-b border-gray-100 hover:bg-gray-50 appointment-row"
-                                data-date="{{ appointment.date.strftime('%Y-%m-%d') }}"
-                                data-status="{{ appointment.status }}">
-                                <td class="py-3">{{ appointment.patient.name }}</td>
-                                <td class="py-3">{{ appointment.patient.phone }}</td>
-                                <td class="py-3">{{ appointment.date.strftime('%b %d, %Y') }}</td>
-                                <td class="py-3">{{ appointment.time }}</td>
-                                <td class="py-3">
-                                    <span class="px-2 py-1 rounded-full text-xs
-                                    {% if appointment.status == 'scheduled' %}bg-blue-100 text-blue-800
-                                    {% elif appointment.status == 'completed' %}bg-green-100 text-green-800
-                                    {% elif appointment.status == 'cancelled' %}bg-red-100 text-red-800
-                                    {% endif %}">
-                                        {{ appointment.status|capitalize }}
-                                    </span>
-                                </td>
-                                <td class="py-3 text-right">
-                                    <div class="flex justify-end space-x-2">
-                                        {% if appointment.status == 'scheduled' %}
-                                            <button class="text-green-600 hover:text-green-800 text-sm complete-btn"
-                                                    data-id="{{ appointment.id }}">Complete</button>
-                                            <button class="text-red-600 hover:text-red-800 text-sm cancel-btn"
-                                                    data-id="{{ appointment.id }}">Cancel</button>
-                                        {% endif %}
-                                    </div>
-                                </td>
-                            </tr>
+                        {% for appt in appointments %}
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="py-3">{{ appt.patient.name }}</td>
+                            <td class="py-3">{{ appt.date.strftime('%b %d, %Y') }}</td>
+                            <td class="py-3">{{ appt.time }}</td>
+                            <td class="py-3">
+                                <span class="px-2 py-1 rounded-full text-xs 
+                                    {% if appt.status == 'scheduled' %}bg-blue-100 text-blue-800
+                                    {% elif appt.status == 'completed' %}bg-green-100 text-green-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ appt.status|capitalize }}
+                                </span>
+                            </td>
+                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
         {% else %}
-            <div class="bg-gray-50 p-4 rounded-lg text-center">
-                <p class="text-gray-600">You don't have any appointments yet.</p>
-            </div>
+            <p class="text-gray-600">No appointments scheduled yet.</p>
         {% endif %}
     </div>
 </div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const statusFilter = document.getElementById('status-filter');
-        const appointmentRows = document.querySelectorAll('.appointment-row');
-        const today = new Date().toISOString().split('T')[0];
-        
-        statusFilter.addEventListener('change', function() {
-            const filterValue = this.value;
-            
-            appointmentRows.forEach(row => {
-                const rowDate = row.dataset.date;
-                const rowStatus = row.dataset.status;
-                
-                switch(filterValue) {
-                    case 'today':
-                        row.style.display = rowDate === today ? '' : 'none';
-                        break;
-                    case 'upcoming':
-                        row.style.display = rowDate >= today && rowStatus === 'scheduled' ? '' : 'none';
-                        break;
-                    case 'completed':
-                        row.style.display = rowStatus === 'completed' ? '' : 'none';
-                        break;
-                    default:
-                        row.style.display = '';
-                }
-            });
-        });
-        
-        // Complete and cancel appointment functionality would go here
-        // This would call API endpoints to update appointment status
-    });
-</script>
 {% endblock %}
