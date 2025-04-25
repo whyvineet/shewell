@@ -30,7 +30,27 @@ else:
     twilio_phone_number = None
 
 genai.configure(api_key='your_api_key_here')  # Replace with your API key
-gemini_model = genai.GenerativeModel('gemini-2.0-flash')
+
+generation_config = {
+    "temperature": 0.2,
+    "top_p": 0.95,
+    "top_k": 64,
+    "max_output_tokens": 65536,
+    "response_mime_type": "text/plain",
+}
+
+system_instruction = """
+    You are a supportive AI assistant for pregnant women on the SheWell platform. Provide helpful, accurate information about pregnancy, but always recommend consulting with their doctor.
+
+-Don't respond to irrelevant question
+-Don't give inaccurate answers, you may skip if you are unsure
+"""
+
+gemini_model = genai.GenerativeModel(
+    model_name='gemini-2.0-flash',
+    generation_config=generation_config,
+    system_instruction=system_instruction
+)
 
 def login_required(user_type=None):
     if 'user_id' not in session:
@@ -274,14 +294,8 @@ def chat():
             app.logger.error(f"Translation error: {e}")
             return text
 
-    prompt = f"""
-    You are a supportive AI assistant for pregnant women on the SheWell platform.
-    Provide helpful, accurate information about pregnancy, but always recommend consulting with their doctor. 
-    The question is: {translate_text(user_message, 'en')}
-    """
-
     try:
-        response = gemini_model.generate_content(prompt)
+        response = gemini_model.generate_content(translate_text(user_message, 'en'))
         ai_response = response.text.strip() if hasattr(response, 'text') else "I'm sorry, I couldn't process your request."
         return jsonify({'response': translate_text(ai_response, selected_language)})
     except Exception as e:
